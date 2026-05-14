@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telefe Rosario En Vivo</title>
-    <!-- Cargamos el reproductor Clappr que es más compatible -->
+    <!-- Cargamos Clappr y el soporte para Chromecast -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@clappr/hlsjs-playback@latest/dist/hlsjs-playback.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr-chromecast-plugin@latest/dist/clappr-chromecast-plugin.min.js"></script>
+    
     <style>
         body {
             background-color: #000;
             margin: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -20,13 +24,14 @@
             width: 100%;
             max-width: 900px;
             aspect-ratio: 16 / 9;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            border-radius: 8px;
+            overflow: hidden;
         }
         h2 {
-            position: absolute;
-            top: 20px;
             color: white;
             font-weight: 300;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -38,12 +43,21 @@
 
     <script>
         var player = new Clappr.Player({
+            // RECUERDA: Si el video no carga, actualiza este link con uno nuevo
             source: "https://telefecanal1.akamaized.net/hls/live/2033413-b/canal5rosario/TOK/master.m3u8?hdnea=st=1778732808~exp=1778740008~acl=/hls/live/2033413-b/canal5rosario/TOK/*~hmac=7f634d5df47d29586f121f5b0f5e4613d440c5d09cda4a40e4a7a674adcc9f5d",
             parentId: "#player",
             width: '100%',
             height: '100%',
             autoPlay: false,
-            mute: false,
+            plugins: [ChromecastPlugin], // Aquí activamos el botón de transmitir
+            chromecast: {
+                appId: '9DFB77C0', // ID estándar para transmisión de video
+                contentType: 'application/x-mpegURL',
+                media: {
+                    title: 'Telefe Rosario',
+                    subtitle: 'Señal en vivo'
+                }
+            },
             playback: {
                 playInline: true,
                 hlsjsConfig: {
