@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Reproductor TV</title>
+    <title>Mi TV Online + Cast</title>
     
-    <!-- Cargamos Clappr y el soporte para HLS (m3u8) -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr-hlsjs-playback@latest/dist/clappr-hlsjs-playback.min.js"></script>
-    
+    <!-- Librerías para el Reproductor con Transmisión (Cast) -->
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@silvermine/videojs-chromecast@1.2.1/dist/silvermine-videojs-chromecast.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@silvermine/videojs-chromecast@1.2.1/dist/silvermine-videojs-chromecast.css" rel="stylesheet">
+
     <style>
         body { 
             background-color: #0f0f0f; 
@@ -42,14 +45,12 @@
             cursor: pointer;
             transition: 0.3s;
             min-width: 250px;
-            text-transform: uppercase;
         }
 
-        /* Colores personalizados por canal */
         .btn-telefe { background: #28a745; } 
         .btn-america { background: #e61d2b; }
 
-        .btn-popup:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .btn-popup:hover { transform: scale(1.03); opacity: 0.9; }
 
         .modal {
             display: none; 
@@ -70,23 +71,21 @@
             width: 95%;
             max-width: 900px;
             aspect-ratio: 16 / 9;
-        }
-
-        #player { 
-            width: 100%; 
-            height: 100%;
+            background: #000;
             border-radius: 12px;
             overflow: hidden;
-            background: #000;
         }
 
+        /* Estilo para el reproductor de América */
+        #player-container { width: 100%; height: 100%; display: none; }
+
+        /* Estilo para el iframe de Telefe */
         .iframe-wrapper {
             width: 100%;
             height: 100%;
             overflow: hidden;
             position: relative;
-            border-radius: 12px;
-            background: #000;
+            display: none;
         }
 
         #iframeContainer.full-view {
@@ -99,25 +98,21 @@
         }
 
         @media (max-width: 600px) {
-            #iframeContainer.full-view {
-                top: -135px; 
-                width: 110%;
-                left: -5%;
-            }
+            #iframeContainer.full-view { top: -135px; width: 110%; left: -5%; }
         }
 
         .close {
             position: absolute;
-            top: -40px;
-            right: 0;
+            top: 10px;
+            right: 10px;
             color: white;
-            font-size: 18px;
+            font-size: 14px;
             cursor: pointer;
             font-weight: bold;
             z-index: 1001;
-            background: rgba(255,255,255,0.1);
-            padding: 5px 15px;
-            border-radius: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 12px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -127,24 +122,27 @@
         <h1>Mi TV Online</h1>
         
         <div class="btn-group">
+            <!-- BOTÓN TELEFE -->
             <button class="btn-popup btn-telefe" onclick="abrirWeb('https://rosario.mitelefe.com/telefe-rosario-en-vivo')">
-                🔵 Telefe Rosario
+                🔵 VER TELEFE ROSARIO
             </button>
 
-            <!-- Botón de América TV actualizado -->
+            <!-- BOTÓN AMÉRICA -->
             <button class="btn-popup btn-america" onclick="abrirStream('https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/a4d5ebec-a11d-44ce-88ec-c3836742210e:SCL2/master.m3u8')">
-                🔴 América TV
+                🔴 VER AMÉRICA (CON CAST)
             </button>
         </div>
     </div>
 
     <div id="miModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="cerrarPopUp()">✕ CERRAR REPRODUCTOR</span>
+            <span class="close" onclick="cerrarPopUp()">✕ CERRAR</span>
             
-            <div id="player" style="display:none;"></div>
+            <!-- Contenedor para América -->
+            <div id="player-container"></div>
             
-            <div id="wrapperTelefe" class="iframe-wrapper" style="display:none;">
+            <!-- Contenedor para Telefe -->
+            <div id="wrapperTelefe" class="iframe-wrapper">
                 <iframe id="iframeContainer" class="full-view" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
@@ -153,41 +151,37 @@
     <script>
         var player;
         var modal = document.getElementById('miModal');
-        var playerDiv = document.getElementById('player');
+        var playerContainer = document.getElementById('player-container');
         var iframe = document.getElementById('iframeContainer');
         var wrapper = document.getElementById('wrapperTelefe');
 
+        // FUNCIÓN PARA AMÉRICA (Usa VideoJS para poder transmitir)
         function abrirStream(url) {
             modal.style.display = "block";
-            playerDiv.style.display = "block";
+            playerContainer.style.display = "block";
             wrapper.style.display = "none";
-            iframe.src = ""; 
+            
+            // Limpiar si ya había un reproductor
+            if (player) { player.dispose(); }
 
-            if (player) player.destroy();
+            playerContainer.innerHTML = `<video id="video_vjs" class="video-js vjs-default-skin vjs-big-play-centered" controls autoplay style="width:100%;height:100%;"></video>`;
 
-            // Configuración optimizada de Clappr
-            player = new Clappr.Player({
-                source: url,
-                parentId: "#player",
-                width: '100%',
-                height: '100%',
-                autoPlay: true,
-                mute: false,
-                preload: 'auto',
-                playback: {
-                    hlsjsConfig: {
-                        enableWorker: true
-                    }
-                }
+            player = videojs('video_vjs', {
+                techOrder: ["html5"],
+                plugins: {
+                    chromecast: { addButtonToControlBar: true }
+                },
+                sources: [{ src: url, type: 'application/x-mpegURL' }]
             });
         }
 
+        // FUNCIÓN PARA TELEFE (Usa el iframe original)
         function abrirWeb(url) {
             modal.style.display = "block";
-            playerDiv.style.display = "none";
+            playerContainer.style.display = "none";
             wrapper.style.display = "block";
             
-            if (player) player.destroy();
+            if (player) { player.dispose(); player = null; }
             
             iframe.src = url; 
         }
@@ -195,10 +189,9 @@
         function cerrarPopUp() {
             modal.style.display = "none";
             iframe.src = ""; 
-            if (player) player.destroy();
+            if (player) { player.dispose(); player = null; }
         }
 
-        // Cerrar al hacer clic fuera del video
         window.onclick = function(event) {
             if (event.target == modal) cerrarPopUp();
         }
