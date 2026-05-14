@@ -52,6 +52,10 @@
             background: #28a745;
         }
 
+        .btn-discovery {
+            background: #ff9800;
+        }
+
         .btn-popup:hover {
             transform: scale(1.03);
             opacity: 0.9;
@@ -123,6 +127,7 @@
             z-index: 1001;
         }
 
+        /* Chromecast */
         google-cast-launcher {
             position: absolute;
             top: 12px;
@@ -141,11 +146,19 @@
 
     <div class="btn-group">
 
+        <!-- Telefe -->
         <button class="btn-popup btn-telefe"
             onclick="abrirWeb('https://rosario.mitelefe.com/telefe-rosario-en-vivo')">
             🔵 VER TELEFE ROSARIO
         </button>
 
+        <!-- Discovery H&H -->
+        <button class="btn-popup btn-discovery"
+            onclick="abrirWeb('https://www.tvporinternet2.com/discovery-hyh-en-vivo-por-internet.html')">
+            🟠 VER DISCOVERY H&H
+        </button>
+
+        <!-- América TV -->
         <button class="btn-popup"
             onclick="abrirStream('https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/a4d5ebec-a11d-44ce-88ec-c3836742210e:SCL2/master.m3u8')">
             🔴 VER AMÉRICA TV
@@ -161,10 +174,13 @@
 
         <span class="close" onclick="cerrarPopUp()">✕ CERRAR</span>
 
+        <!-- Chromecast -->
         <google-cast-launcher></google-cast-launcher>
 
+        <!-- Player -->
         <div id="player" style="display:none;"></div>
 
+        <!-- Iframe -->
         <div id="wrapperTelefe"
              class="iframe-wrapper"
              style="display:none;">
@@ -191,7 +207,7 @@
     const iframe = document.getElementById('iframeContainer');
     const wrapper = document.getElementById('wrapperTelefe');
 
-    // Chromecast Init
+    // Chromecast
     window['__onGCastApiAvailable'] = function(isAvailable) {
 
         if (isAvailable) {
@@ -208,6 +224,7 @@
         }
     };
 
+    // Streams m3u8
     function abrirStream(url) {
 
         currentStream = url;
@@ -231,7 +248,6 @@
             autoPlay: true
         });
 
-        // Detectar sesión cast activa
         const context = cast.framework.CastContext.getInstance();
 
         context.addEventListener(
@@ -249,6 +265,7 @@
         );
     }
 
+    // Chromecast
     async function enviarAlChromecast() {
 
         try {
@@ -278,12 +295,12 @@
 
             await session.loadMedia(request);
 
-            // PAUSAR reproducción local
+            // Pausar celular
             if (player && player.core) {
                 player.pause();
             }
 
-            console.log("Transmitiendo al Chromecast");
+            console.log("Transmitiendo");
 
         } catch (err) {
 
@@ -291,6 +308,7 @@
         }
     }
 
+    // Web iframe
     function abrirWeb(url) {
 
         modal.style.display = "block";
@@ -305,6 +323,7 @@
         iframe.src = url;
     }
 
+    // Cerrar
     function cerrarPopUp() {
 
         modal.style.display = "none";
@@ -316,6 +335,7 @@
         }
     }
 
+    // Click afuera
     window.onclick = function(event) {
 
         if (event.target == modal) {
