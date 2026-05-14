@@ -3,184 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi TV Online PRO</title>
+    <title>Mi Reproductor TV</title>
     
-    <!-- Video.js y CSS -->
-    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+    
     <style>
         body { 
-            background-color: #0b0b0b; 
+            background-color: #0f0f0f; 
             margin: 0; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             justify-content: center;
             min-height: 100vh; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif; 
             color: white;
         }
-        .container { text-align: center; width: 90%; max-width: 400px; }
-        h1 { margin-bottom: 30px; font-weight: 300; letter-spacing: 2px; }
-        
-        .btn-group { display: flex; flex-direction: column; gap: 20px; }
+
+        .container { text-align: center; }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
         .btn-popup {
-            padding: 18px;
+            background: #008cff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
             font-size: 16px;
             font-weight: bold;
-            border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
             transition: 0.3s;
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            min-width: 250px;
         }
-        .btn-telefe { background: linear-gradient(45deg, #28a745, #20c997); color: white; }
-        .btn-america { background: linear-gradient(45deg, #e61d2b, #ff4757); color: white; }
-        .btn-popup:hover { transform: translateY(-3px); filter: brightness(1.1); }
 
-        /* MODAL */
+        .btn-telefe { background: #28a745; } 
+
+        .btn-popup:hover { transform: scale(1.03); opacity: 0.9; }
+
         .modal {
             display: none; 
             position: fixed;
-            z-index: 1000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background-color: #000;
-        }
-        .modal-content {
-            position: relative;
+            z-index: 999;
+            left: 0;
+            top: 0;
             width: 100%;
             height: 100%;
-            display: flex;
-            flex-direction: column;
+            background-color: rgba(0,0,0,0.95);
         }
-        .close-bar {
-            background: #1a1a1a;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #333;
-        }
-        .close-btn { color: #ff4757; cursor: pointer; font-weight: bold; font-size: 14px; }
 
-        /* CONTENEDORES */
-        #video-wrapper, #iframe-wrapper { flex-grow: 1; width: 100%; height: 100%; overflow: hidden; position: relative; }
-        
-        /* Ajuste especial Telefe */
-        #iframeContainer {
+        .modal-content {
+            position: relative;
+            margin: auto;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 95%;
+            max-width: 900px;
+            aspect-ratio: 16 / 9;
+        }
+
+        #player { 
+            width: 100%; 
+            height: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .iframe-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            border-radius: 12px;
+            background: #000;
+        }
+
+        /* --- AJUSTE PARA NO TAPAR CONTROLES (PANTALLA COMPLETA) --- */
+        #iframeContainer.full-view {
             position: absolute;
-            top: -245px; left: -2%; width: 104%; height: 1200px; border: none;
+            top: -245px; /* Ajuste fino para centrar el video */
+            left: -2%;
+            width: 104%; /* Menos zoom lateral para no perder botones */
+            height: 1000px; 
+            border: none;
         }
-        @media (max-width: 600px) { #iframeContainer { top: -135px; width: 110%; left: -5%; } }
 
-        /* Estilo Botón Cast de VideoJS */
-        .vjs-chromecast-button .vjs-icon-placeholder:before {
-            content: "\f10b"; /* Icono de cast nativo de VideoJS */
-            font-family: VideoJS;
+        /* Ajuste para que el botón de pantalla completa sea visible en celulares */
+        @media (max-width: 600px) {
+            #iframeContainer.full-view {
+                top: -135px; 
+                width: 110%;
+                left: -5%;
+            }
+        }
+
+        .close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1001;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>MI TV ONLINE</h1>
+        <h1>Mi TV Online</h1>
+        
         <div class="btn-group">
-            <button class="btn-popup btn-telefe" onclick="abrirTelefe('https://rosario.mitelefe.com/telefe-rosario-en-vivo')">
-                🔵 Telefe Rosario
+            <button class="btn-popup btn-telefe" onclick="abrirWeb('https://rosario.mitelefe.com/telefe-rosario-en-vivo')">
+                🔵 VER TELEFE ROSARIO
             </button>
 
-            <button class="btn-popup btn-america" onclick="abrirAmérica('https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/a4d5ebec-a11d-44ce-88ec-c3836742210e:SCL2/master.m3u8')">
-                🔴 América TV + CAST
+            <button class="btn-popup" onclick="abrirStream('https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/a4d5ebec-a11d-44ce-88ec-c3836742210e:SCL2/master.m3u8')">
+                🔴 VER AMÉRICA TV
             </button>
         </div>
     </div>
 
-    <!-- El Modal Único -->
     <div id="miModal" class="modal">
         <div class="modal-content">
-            <div class="close-bar">
-                <span id="titulo-modal">Reproduciendo...</span>
-                <span class="close-btn" onclick="cerrarTodo()">✕ CERRAR REPRODUCTOR</span>
-            </div>
+            <span class="close" onclick="cerrarPopUp()">✕ CERRAR</span>
             
-            <!-- Contenedor para América -->
-            <div id="video-wrapper" style="display:none;"></div>
+            <div id="player" style="display:none;"></div>
             
-            <!-- Contenedor para Telefe -->
-            <div id="iframe-wrapper" style="display:none;">
-                <iframe id="iframeContainer" allowfullscreen></iframe>
+            <div id="wrapperTelefe" class="iframe-wrapper" style="display:none;">
+                <iframe id="iframeContainer" class="full-view" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
     </div>
-
-    <!-- SCRIPTS DE VIDEOJS + CHROMECAST -->
-    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
-    <!-- Script oficial de Google Cast -->
-    <script async src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-    <!-- Plugin VideoJS Chromecast -->
-    <script src="https://cdn.jsdelivr.net/npm/@silvermine/videojs-chromecast@1.2.1/dist/silvermine-videojs-chromecast.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/@silvermine/videojs-chromecast@1.2.1/dist/silvermine-videojs-chromecast.css" rel="stylesheet">
 
     <script>
         var player;
-        const modal = document.getElementById('miModal');
-        const vWrapper = document.getElementById('video-wrapper');
-        const iWrapper = document.getElementById('iframe-wrapper');
-        const iframe = document.getElementById('iframeContainer');
-        const titulo = document.getElementById('titulo-modal');
+        var modal = document.getElementById('miModal');
+        var playerDiv = document.getElementById('player');
+        var iframe = document.getElementById('iframeContainer');
+        var wrapper = document.getElementById('wrapperTelefe');
 
-        function abrirAmérica(url) {
-            titulo.innerText = "América TV (En Vivo)";
+        function abrirStream(url) {
             modal.style.display = "block";
-            vWrapper.style.display = "block";
-            iWrapper.style.display = "none";
+            playerDiv.style.display = "block";
+            wrapper.style.display = "none";
+            iframe.src = ""; 
 
-            // Limpiar previo
-            if (player) player.dispose();
-            vWrapper.innerHTML = `<video id="video_player" class="video-js vjs-default-skin vjs-big-play-centered" controls autoplay style="width:100%;height:100%;"></video>`;
+            if (player) player.destroy();
 
-            // Inicializar VideoJS con soporte Chromecast
-            player = videojs('video_player', {
-                techOrder: ["html5"],
-                plugins: {
-                    chromecast: {
-                        addButtonToControlBar: true,
-                        requestSessionTimeout: 10000
-                    }
-                }
-            });
-
-            player.src({ src: url, type: 'application/x-mpegURL' });
-            
-            player.ready(function() {
-                player.play().catch(e => console.log("Auto-play prevenido, requiere clic"));
+            player = new Clappr.Player({
+                source: url,
+                parentId: "#player",
+                width: '100%',
+                height: '100%',
+                autoPlay: true
             });
         }
 
-        function abrirTelefe(url) {
-            titulo.innerText = "Telefe Rosario (En Vivo)";
+        function abrirWeb(url) {
             modal.style.display = "block";
-            vWrapper.style.display = "none";
-            iWrapper.style.display = "block";
+            playerDiv.style.display = "none";
+            wrapper.style.display = "block";
             
-            if (player) { player.dispose(); player = null; }
-            iframe.src = url;
+            if (player) player.destroy();
+            
+            iframe.src = url; 
         }
 
-        function cerrarTodo() {
+        function cerrarPopUp() {
             modal.style.display = "none";
-            iframe.src = "";
-            if (player) {
-                player.dispose();
-                player = null;
-            }
+            iframe.src = ""; 
+            if (player) player.destroy();
         }
 
-        // Cerrar si tocan fuera (opcional)
         window.onclick = function(event) {
-            if (event.target == modal) cerrarTodo();
+            if (event.target == modal) cerrarPopUp();
         }
     </script>
 </body>
 </html>
-
