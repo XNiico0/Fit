@@ -3,68 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telefe Rosario En Vivo</title>
-    <!-- Cargamos Clappr y el soporte para Chromecast -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@clappr/hlsjs-playback@latest/dist/hlsjs-playback.min.js"></script>
+    <title>Mi TV Personal</title>
+    
+    <!-- Scripts de Clappr y Plugin Chromecast -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@clappr/player@latest/dist/clappr.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr-chromecast-plugin@latest/dist/clappr-chromecast-plugin.min.js"></script>
     
     <style>
-        body {
-            background-color: #000;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
+        body { 
+            background-color: #0b0b0b; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: sans-serif;
+            height: 100vh; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            color: white;
         }
-        #player {
-            width: 100%;
-            max-width: 900px;
-            aspect-ratio: 16 / 9;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        #player { 
+            width: 100%; 
+            max-width: 850px; 
+            aspect-ratio: 16 / 9; 
+            background: #000;
             border-radius: 8px;
             overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8);
         }
-        h2 {
-            color: white;
-            font-weight: 300;
-            margin-bottom: 20px;
+        .menu-canales {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
         }
+        .btn-canal {
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .btn-canal:hover {
+            background: #008cff;
+            border-color: #008cff;
+            transform: translateY(-2px);
+        }
+        .btn-canal:active { transform: translateY(0); }
     </style>
 </head>
 <body>
 
-    <h2>Canal 5 Rosario - En Vivo</h2>
+    <h3 style="margin-bottom: 15px; font-weight: 300;">Reproductor en Vivo</h3>
 
     <div id="player"></div>
 
+    <div class="menu-canales">
+        <!-- Botón Canal 1: Telefe Rosario con tu link original -->
+        <button class="btn-canal" onclick="cambiarCanal('https://telefecanal1.akamaized.net/hls/live/2033413-b/canal5rosario/TOK/master.m3u8?hdnea=st=1778732808~exp=1778740008~acl=/hls/live/2033413-b/canal5rosario/TOK/*~hmac=7f634d5df47d29586f121f5b0f5e4613d440c5d09cda4a40e4a7a674adcc9f5d', 'Telefe Rosario')">
+            Telefe Rosario
+        </button>
+
+        <!-- Botón Canal 2: El nuevo link de Google DAI que pasaste -->
+        <button class="btn-canal" onclick="cambiarCanal('https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/a4d5ebec-a11d-44ce-88ec-c3836742210e:SCL2/master.m3u8', 'Canal Nuevo')">
+            Canal Nuevo
+        </button>
+    </div>
+
     <script>
+        // Inicialización del reproductor con el primer canal
         var player = new Clappr.Player({
-            // RECUERDA: Si el video no carga, actualiza este link con uno nuevo
             source: "https://telefecanal1.akamaized.net/hls/live/2033413-b/canal5rosario/TOK/master.m3u8?hdnea=st=1778732808~exp=1778740008~acl=/hls/live/2033413-b/canal5rosario/TOK/*~hmac=7f634d5df47d29586f121f5b0f5e4613d440c5d09cda4a40e4a7a674adcc9f5d",
             parentId: "#player",
             width: '100%',
             height: '100%',
             autoPlay: false,
-            plugins: [ChromecastPlugin], // Aquí activamos el botón de transmitir
+            plugins: [ChromecastPlugin],
             chromecast: {
-                appId: '9DFB77C0', // ID estándar para transmisión de video
-                contentType: 'application/x-mpegURL',
+                appId: '9DFB77C0',
                 media: {
                     title: 'Telefe Rosario',
-                    subtitle: 'Señal en vivo'
-                }
-            },
-            playback: {
-                playInline: true,
-                hlsjsConfig: {
-                    enableWorker: true
+                    subtitle: 'Streaming en vivo'
                 }
             }
         });
+
+        function cambiarCanal(url, nombre) {
+            player.load(url);
+            player.play();
+            // Esto actualiza el nombre en el dispositivo al transmitir
+            player.configure({
+                chromecast: {
+                    media: { title: nombre }
+                }
+            });
+        }
     </script>
 </body>
 </html>
