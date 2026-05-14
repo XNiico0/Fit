@@ -4,27 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Reproductor TV</title>
-    
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
 
-    <!-- Plugins para Chromecast / AirPlay -->
-    <script src="https://cdn.jsdelivr.net/npm/clappr-chromecast-plugin@latest/dist/clappr-chromecast-plugin.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/clappr-airplay-plugin@latest/dist/clappr-airplay-plugin.min.js"></script>
-    
+    <!-- Clappr -->
+    <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+
+    <!-- HLS -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <!-- Chromecast -->
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+
     <style>
-        body { 
-            background-color: #0f0f0f; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
+        body {
+            background-color: #0f0f0f;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            min-height: 100vh; 
-            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
             color: white;
         }
 
-        .container { text-align: center; }
+        .container {
+            text-align: center;
+        }
 
         .btn-group {
             display: flex;
@@ -46,12 +51,17 @@
             min-width: 250px;
         }
 
-        .btn-telefe { background: #28a745; } 
+        .btn-telefe {
+            background: #28a745;
+        }
 
-        .btn-popup:hover { transform: scale(1.03); opacity: 0.9; }
+        .btn-popup:hover {
+            transform: scale(1.03);
+            opacity: 0.9;
+        }
 
         .modal {
-            display: none; 
+            display: none;
             position: fixed;
             z-index: 999;
             left: 0;
@@ -71,8 +81,8 @@
             aspect-ratio: 16 / 9;
         }
 
-        #player { 
-            width: 100%; 
+        #player {
+            width: 100%;
             height: 100%;
             border-radius: 12px;
             overflow: hidden;
@@ -88,19 +98,18 @@
             background: #000;
         }
 
-        /* --- AJUSTE PARA NO TAPAR CONTROLES (PANTALLA COMPLETA) --- */
         #iframeContainer.full-view {
             position: absolute;
             top: -245px;
             left: -2%;
             width: 104%;
-            height: 1000px; 
+            height: 1000px;
             border: none;
         }
 
         @media (max-width: 600px) {
             #iframeContainer.full-view {
-                top: -135px; 
+                top: -135px;
                 width: 110%;
                 left: -5%;
             }
@@ -116,19 +125,32 @@
             font-weight: bold;
             z-index: 1001;
         }
+
+        /* Botón Chromecast */
+        google-cast-launcher {
+            position: absolute;
+            top: 12px;
+            right: 55px;
+            width: 28px;
+            height: 28px;
+            z-index: 9999;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>Mi TV Online</h1>
-        
+
         <div class="btn-group">
-            <button class="btn-popup btn-telefe" onclick="abrirWeb('https://rosario.mitelefe.com/telefe-rosario-en-vivo')">
+            <button class="btn-popup btn-telefe"
+                onclick="abrirWeb('https://rosario.mitelefe.com/telefe-rosario-en-vivo')">
                 🔵 VER TELEFE ROSARIO
             </button>
 
-            <button class="btn-popup" onclick="abrirStream('https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/a4d5ebec-a11d-44ce-88ec-c3836742210e:SCL2/master.m3u8')">
+            <button class="btn-popup"
+                onclick="abrirStream('https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/a4d5ebec-a11d-44ce-88ec-c3836742210e:SCL2/master.m3u8')">
                 🔴 VER AMÉRICA TV
             </button>
         </div>
@@ -136,13 +158,22 @@
 
     <div id="miModal" class="modal">
         <div class="modal-content">
+
             <span class="close" onclick="cerrarPopUp()">✕ CERRAR</span>
-            
+
+            <!-- Botón transmitir -->
+            <google-cast-launcher id="castButton"></google-cast-launcher>
+
             <div id="player" style="display:none;"></div>
-            
+
             <div id="wrapperTelefe" class="iframe-wrapper" style="display:none;">
-                <iframe id="iframeContainer" class="full-view" frameborder="0" allowfullscreen></iframe>
+                <iframe id="iframeContainer"
+                        class="full-view"
+                        frameborder="0"
+                        allowfullscreen>
+                </iframe>
             </div>
+
         </div>
     </div>
 
@@ -153,13 +184,30 @@
         var iframe = document.getElementById('iframeContainer');
         var wrapper = document.getElementById('wrapperTelefe');
 
+        // Inicializar Chromecast
+        window['__onGCastApiAvailable'] = function(isAvailable) {
+            if (isAvailable) {
+                cast.framework.CastContext.getInstance().setOptions({
+                    receiverApplicationId:
+                        chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                    autoJoinPolicy:
+                        chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+                });
+            }
+        };
+
         function abrirStream(url) {
+
             modal.style.display = "block";
+
             playerDiv.style.display = "block";
             wrapper.style.display = "none";
-            iframe.src = ""; 
 
-            if (player) player.destroy();
+            iframe.src = "";
+
+            if (player) {
+                player.destroy();
+            }
 
             player = new Clappr.Player({
                 source: url,
@@ -167,39 +215,78 @@
                 width: '100%',
                 height: '100%',
                 autoPlay: true,
-
-                /* Plugins de transmisión */
-                plugins: [
-                    ChromecastPlugin,
-                    ClapprAirPlayPlugin
-                ],
-
-                chromecast: {
-                    appId: '9DFB77C0',
-                    contentType: 'video/mp4'
+                mute: false,
+                playback: {
+                    playInline: true
+                },
+                mediacontrol: {
+                    seekbar: "#008cff",
+                    buttons: "#ffffff"
                 }
             });
+
+            // Cast manual al tocar Chromecast
+            document.getElementById('castButton').onclick = async function() {
+
+                const context = cast.framework.CastContext.getInstance();
+
+                try {
+
+                    await context.requestSession();
+
+                    const session = context.getCurrentSession();
+
+                    const mediaInfo =
+                        new chrome.cast.media.MediaInfo(
+                            url,
+                            'application/x-mpegURL'
+                        );
+
+                    mediaInfo.streamType =
+                        chrome.cast.media.StreamType.LIVE;
+
+                    const request =
+                        new chrome.cast.media.LoadRequest(mediaInfo);
+
+                    session.loadMedia(request);
+
+                } catch (e) {
+                    console.log("Cast cancelado");
+                }
+            };
         }
 
         function abrirWeb(url) {
+
             modal.style.display = "block";
+
             playerDiv.style.display = "none";
             wrapper.style.display = "block";
-            
-            if (player) player.destroy();
-            
-            iframe.src = url; 
+
+            if (player) {
+                player.destroy();
+            }
+
+            iframe.src = url;
         }
 
         function cerrarPopUp() {
+
             modal.style.display = "none";
-            iframe.src = ""; 
-            if (player) player.destroy();
+
+            iframe.src = "";
+
+            if (player) {
+                player.destroy();
+            }
         }
 
         window.onclick = function(event) {
-            if (event.target == modal) cerrarPopUp();
+            if (event.target == modal) {
+                cerrarPopUp();
+            }
         }
     </script>
+
 </body>
 </html>
