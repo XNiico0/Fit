@@ -3,57 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Telefe Rosario (Embed)</title>
+    <title>Telefe Rosario En Vivo</title>
+    <!-- Cargamos el reproductor Clappr que es más compatible -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
     <style>
         body {
-            background-color: #1a1a1a;
+            background-color: #000;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
+            font-family: sans-serif;
         }
-        .container {
-            width: 95%;
-            max-width: 900px;
-            text-align: center;
-        }
-        h2 { color: white; margin-bottom: 20px; }
-        .video-wrapper {
-            position: relative;
-            padding-bottom: 56.25%; /* Relación de aspecto 16:9 */
-            height: 0;
-            overflow: hidden;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            background: #000;
-        }
-        .video-wrapper iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
+        #player {
             width: 100%;
-            height: 100%;
-            border: 0;
+            max-width: 900px;
+            aspect-ratio: 16 / 9;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        h2 {
+            position: absolute;
+            top: 20px;
+            color: white;
+            font-weight: 300;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Telefe Rosario - En Vivo</h2>
-    
-    <div class="video-wrapper">
-        <!-- Aquí está el Embed que querías mantener -->
-        <iframe 
-            src="https://m3u8-player.net/es/m3u8-embed/?video_url=https%3A%2F%2Ftelefecanal1.akamaized.net%2Fhls%2Flive%2F2033413-b%2Fcanal5rosario%2FTOK%2Fmaster.m3u8%3Fhdnea%3Dst%3D1778732808%7Eexp%3D1778740008%7Eacl%3D%2Fhls%2Flive%2F2033413-b%2Fcanal5rosario%2FTOK%2F*%7Ehmac%3D7f634d5df47d29586f121f5b0f5e4613d440c5d09cda4a40e4a7a674adcc9f5d" 
-            allowfullscreen 
-            allow="autoplay; encrypted-media">
-        </iframe>
-    </div>
-</div>
+    <h2>Canal 5 Rosario - En Vivo</h2>
 
+    <div id="player"></div>
+
+    <script>
+        var player = new Clappr.Player({
+            source: "https://telefecanal1.akamaized.net/hls/live/2033413-b/canal5rosario/TOK/master.m3u8?hdnea=st=1778732808~exp=1778740008~acl=/hls/live/2033413-b/canal5rosario/TOK/*~hmac=7f634d5df47d29586f121f5b0f5e4613d440c5d09cda4a40e4a7a674adcc9f5d",
+            parentId: "#player",
+            width: '100%',
+            height: '100%',
+            autoPlay: false,
+            mute: false,
+            playback: {
+                playInline: true,
+                hlsjsConfig: {
+                    enableWorker: true
+                }
+            }
+        });
+    </script>
 </body>
 </html>
