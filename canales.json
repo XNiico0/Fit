@@ -1,3 +1,5 @@
 {
-  "america": "https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/a4d5ebec-a11d-44ce-88ec-c3836742210e:SCL2/master.m3u8"
+  "america": "https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/e2d5f1bb-87c9-420b-85a3-4c8e5ef040aa:SCL2/variant/085a2414a253631c90e7ac89ccc9f934/bandwidth/1031000.m3u8",
+
+  "discovery": "PEGA_ACA_TU_LINK_M3U8"
 }
