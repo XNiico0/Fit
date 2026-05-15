@@ -8,12 +8,6 @@
     <!-- Clappr -->
     <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
 
-    <!-- HLS.js -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-    <!-- Plugin HLS para Clappr -->
-    <script src="https://cdn.jsdelivr.net/npm/@clappr/hlsjs-playback@latest/dist/hlsjs-playback.min.js"></script>
-
     <!-- Chromecast -->
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
@@ -80,6 +74,10 @@
 
         .btn-discovery {
             background: #ff9800;
+        }
+
+        .btn-tn {
+            background: #1976d2;
         }
 
         .modal {
@@ -212,21 +210,21 @@
 
             🔵 VER TELEFE ROSARIO
 
-        </button>
-
-        <!-- Discovery -->
-        <button class="btn-popup btn-discovery"
-        onclick="cargarCanal('discovery')">
-
-            🟠 VER DISCOVERY H&H
-
-        </button>
+        </button>      
 
         <!-- América -->
         <button class="btn-popup btn-america"
         onclick="cargarCanal('america')">
 
             🔴 VER AMÉRICA TV
+
+        </button>
+
+        <!-- TN -->
+        <button class="btn-popup btn-tn"
+        onclick="cargarCanal('tn')">
+
+            🔵 VER TN EN VIVO
 
         </button>
 
@@ -245,16 +243,13 @@
 
         </span>
 
-        <!-- Chromecast -->
         <google-cast-launcher>
         </google-cast-launcher>
 
-        <!-- Player -->
         <div id="player"
         style="display:none;">
         </div>
 
-        <!-- Iframe -->
         <div id="wrapperTelefe"
         class="iframe-wrapper"
         style="display:none;">
@@ -309,10 +304,6 @@
                 .AutoJoinPolicy
                 .ORIGIN_SCOPED
             });
-
-            console.log(
-                "Chromecast listo"
-            );
         }
     };
 
@@ -379,52 +370,20 @@
 
             parentId: "#player",
 
-            plugins: [HlsjsPlayback],
-
             width: "100%",
             height: "100%",
 
-            autoPlay: true,
-
-            mute: false,
-
-            playback: {
-
-                playInline: true,
-
-                hlsjsConfig: {
-
-                    debug: false,
-
-                    enableWorker: true,
-
-                    lowLatencyMode: true,
-
-                    backBufferLength: 90,
-
-                    maxBufferLength: 30,
-
-                    liveSyncDurationCount: 3
-                }
-            },
-
-            mediacontrol: {
-
-                seekbar: "#00b7ff",
-
-                buttons: "#eee"
-            }
+            autoPlay: true
         });
 
         // Error stream
 
         player.on(
         Clappr.Events.PLAYER_ERROR,
-        (e) => {
+        () => {
 
             console.log(
-                "Error stream",
-                e
+            "Error stream"
             );
         });
 
@@ -483,7 +442,7 @@
 
                 currentStream,
 
-                'application/x-mpegURL'
+                'application/vnd.apple.mpegurl'
             );
 
             mediaInfo.streamType =
@@ -498,9 +457,6 @@
 
             mediaInfo.metadata.title =
             "TV Online";
-
-            mediaInfo.metadata.subtitle =
-            "En vivo";
 
             const request =
 
@@ -520,16 +476,9 @@
                 player.pause();
             }
 
-            console.log(
-                "Transmitiendo"
-            );
-
         } catch(err) {
 
-            console.log(
-                "Error Cast:",
-                err
-            );
+            console.log(err);
         }
     }
 
