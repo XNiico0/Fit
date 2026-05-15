@@ -79,6 +79,11 @@
             background: #1976d2;
         }
 
+        .btn-eltrece {
+            background: #fbc02d;
+            color: black;
+        }
+
         .modal {
 
             display: none;
@@ -247,6 +252,14 @@
 
     </button>
 
+    <!-- El Trece -->
+    <button class="btn-popup btn-eltrece"
+    onclick="cargarCanalHLS('eltrece')">
+
+        🟡 VER EL TRECE
+
+    </button>
+
 </div>
 
 </div>
@@ -307,7 +320,7 @@
     let hls;
     let currentStream = "";
 
-    // JSON implementado
+    // Canales
 
     const canales = {
 
@@ -315,7 +328,10 @@
         "https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/e2d5f1bb-87c9-420b-85a3-4c8e5ef040aa:SCL2/variant/085a2414a253631c90e7ac89ccc9f934/bandwidth/1031000.m3u8",
 
         tn:
-        "https://live-01-01-tn.vodgc.net/TN24/index.m3u8"
+        "https://live-01-01-tn.vodgc.net/TN24/index.m3u8",
+
+        eltrece:
+        "https://live-01-02-eltrece.vodgc.net/eltrecetv_noti/index.m3u8"
     };
 
     const modal =
@@ -375,7 +391,7 @@
         abrirStream(url);
     }
 
-    // TN con HLS
+    // HLS
 
     function cargarCanalHLS(nombre) {
 
@@ -425,7 +441,7 @@
         escucharChromecast();
     }
 
-    // Abrir TN
+    // Abrir HLS
 
     function abrirHLS(url) {
 
@@ -487,7 +503,7 @@
         escucharChromecast();
     }
 
-    // Escuchar Chromecast
+    // Chromecast listener
 
     function escucharChromecast() {
 
@@ -520,7 +536,7 @@
         );
     }
 
-    // Enviar stream al Chromecast
+    // Enviar stream
 
     async function enviarAlChromecast() {
 
