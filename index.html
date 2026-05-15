@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Reproductor TV</title>
+    <title>Mi TV Online</title>
 
     <!-- Clappr -->
     <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
 
-    <!-- Chromecast SDK -->
+    <!-- Chromecast -->
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
     <style>
+
         body {
-            background-color: #0f0f0f;
+            background: #0f0f0f;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             min-height: 100vh;
-            font-family: 'Segoe UI', sans-serif;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            font-family: Arial;
             color: white;
         }
 
@@ -29,113 +31,163 @@
         }
 
         .btn-group {
+
             display: flex;
             flex-direction: column;
+
             gap: 15px;
             margin-top: 20px;
         }
 
         .btn-popup {
-            background: #008cff;
-            color: white;
+
             border: none;
+            border-radius: 8px;
+
             padding: 15px 30px;
+
             font-size: 16px;
             font-weight: bold;
-            border-radius: 8px;
+
             cursor: pointer;
-            transition: 0.3s;
-            min-width: 250px;
+
+            color: white;
+
+            min-width: 260px;
+
+            transition: .3s;
+        }
+
+        .btn-popup:hover {
+
+            transform: scale(1.03);
+            opacity: .9;
         }
 
         .btn-telefe {
             background: #28a745;
         }
 
+        .btn-america {
+            background: #e53935;
+        }
+
         .btn-discovery {
             background: #ff9800;
         }
 
-        .btn-popup:hover {
-            transform: scale(1.03);
-            opacity: 0.9;
-        }
-
         .modal {
+
             display: none;
+
             position: fixed;
+
             z-index: 999;
+
             left: 0;
             top: 0;
+
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.95);
+
+            background: rgba(0,0,0,.95);
         }
 
         .modal-content {
+
             position: relative;
+
             margin: auto;
+
             top: 50%;
+
             transform: translateY(-50%);
+
             width: 95%;
             max-width: 900px;
-            aspect-ratio: 16 / 9;
+
+            aspect-ratio: 16/9;
         }
 
         #player {
+
             width: 100%;
             height: 100%;
+
+            background: #000;
+
             border-radius: 12px;
             overflow: hidden;
-            background: #000;
         }
 
         .iframe-wrapper {
+
             width: 100%;
             height: 100%;
+
             overflow: hidden;
+
             position: relative;
+
             border-radius: 12px;
+
             background: #000;
         }
 
         #iframeContainer.full-view {
+
             position: absolute;
+
             top: -245px;
             left: -2%;
+
             width: 104%;
             height: 1000px;
+
             border: none;
         }
 
         @media (max-width: 600px) {
+
             #iframeContainer.full-view {
+
                 top: -135px;
+
                 width: 110%;
+
                 left: -5%;
             }
         }
 
         .close {
+
             position: absolute;
+
             top: -40px;
             right: 0;
-            color: white;
+
             font-size: 24px;
-            cursor: pointer;
+
             font-weight: bold;
+
+            cursor: pointer;
+
             z-index: 1001;
         }
 
-        /* Chromecast */
         google-cast-launcher {
+
             position: absolute;
+
             top: 12px;
             right: 55px;
+
             width: 28px;
             height: 28px;
+
             z-index: 9999;
         }
+
     </style>
 </head>
 <body>
@@ -148,20 +200,28 @@
 
         <!-- Telefe -->
         <button class="btn-popup btn-telefe"
-            onclick="abrirWeb('https://rosario.mitelefe.com/telefe-rosario-en-vivo')">
+        onclick="abrirWeb(
+        'https://rosario.mitelefe.com/telefe-rosario-en-vivo'
+        )">
+
             🔵 VER TELEFE ROSARIO
+
         </button>
 
-        <!-- Discovery H&H -->
+        <!-- Discovery -->
         <button class="btn-popup btn-discovery"
-            onclick="abrirWeb('https://www.tvporinternet2.com/discovery-hyh-en-vivo-por-internet.html')">
+        onclick="cargarCanal('discovery')">
+
             🟠 VER DISCOVERY H&H
+
         </button>
 
-        <!-- América TV -->
-        <button class="btn-popup"
-            onclick="abrirStream('https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/c5e68933-5fcf-4056-8dfa-4ea0fa6ab6f4:SCL2/master.m3u8')">
+        <!-- América -->
+        <button class="btn-popup btn-america"
+        onclick="cargarCanal('america')">
+
             🔴 VER AMÉRICA TV
+
         </button>
 
     </div>
@@ -172,23 +232,28 @@
 
     <div class="modal-content">
 
-        <span class="close" onclick="cerrarPopUp()">✕ CERRAR</span>
+        <span class="close"
+        onclick="cerrarPopUp()">
 
-        <!-- Chromecast -->
-        <google-cast-launcher></google-cast-launcher>
+            ✕ CERRAR
 
-        <!-- Player -->
-        <div id="player" style="display:none;"></div>
+        </span>
 
-        <!-- Iframe -->
+        <google-cast-launcher>
+        </google-cast-launcher>
+
+        <div id="player"
+        style="display:none;">
+        </div>
+
         <div id="wrapperTelefe"
-             class="iframe-wrapper"
-             style="display:none;">
+        class="iframe-wrapper"
+        style="display:none;">
 
             <iframe id="iframeContainer"
-                    class="full-view"
-                    frameborder="0"
-                    allowfullscreen>
+            class="full-view"
+            frameborder="0"
+            allowfullscreen>
             </iframe>
 
         </div>
@@ -202,37 +267,92 @@
     let player;
     let currentStream = "";
 
-    const modal = document.getElementById('miModal');
-    const playerDiv = document.getElementById('player');
-    const iframe = document.getElementById('iframeContainer');
-    const wrapper = document.getElementById('wrapperTelefe');
+    const modal =
+        document.getElementById('miModal');
+
+    const playerDiv =
+        document.getElementById('player');
+
+    const iframe =
+        document.getElementById('iframeContainer');
+
+    const wrapper =
+        document.getElementById('wrapperTelefe');
 
     // Chromecast
-    window['__onGCastApiAvailable'] = function(isAvailable) {
+
+    window['__onGCastApiAvailable'] =
+    function(isAvailable) {
 
         if (isAvailable) {
 
-            cast.framework.CastContext.getInstance().setOptions({
+            cast.framework
+            .CastContext
+            .getInstance()
+            .setOptions({
+
                 receiverApplicationId:
-                    chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                chrome.cast.media
+                .DEFAULT_MEDIA_RECEIVER_APP_ID,
 
                 autoJoinPolicy:
-                    chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+                chrome.cast
+                .AutoJoinPolicy
+                .ORIGIN_SCOPED
             });
-
-            console.log("Chromecast listo");
         }
     };
 
-    // Streams m3u8
+    // Cargar canal JSON
+
+    async function cargarCanal(nombre) {
+
+        try {
+
+            const response =
+            await fetch("./canales.json");
+
+            const canales =
+            await response.json();
+
+            const url =
+            canales[nombre];
+
+            if (!url) {
+
+                alert(
+                "Canal no encontrado"
+                );
+
+                return;
+            }
+
+            abrirStream(url);
+
+        } catch(err) {
+
+            console.log(err);
+
+            alert(
+            "Error cargando canales"
+            );
+        }
+    }
+
+    // Abrir stream
+
     function abrirStream(url) {
 
         currentStream = url;
 
-        modal.style.display = "block";
+        modal.style.display =
+        "block";
 
-        playerDiv.style.display = "block";
-        wrapper.style.display = "none";
+        playerDiv.style.display =
+        "block";
+
+        wrapper.style.display =
+        "none";
 
         iframe.src = "";
 
@@ -241,22 +361,51 @@
         }
 
         player = new Clappr.Player({
+
             source: url,
+
             parentId: "#player",
+
             width: "100%",
             height: "100%",
+
             autoPlay: true
         });
 
-        const context = cast.framework.CastContext.getInstance();
+        // Error stream
+
+        player.on(
+        Clappr.Events.PLAYER_ERROR,
+        () => {
+
+            console.log(
+            "Error stream"
+            );
+        });
+
+        // Chromecast
+
+        const context =
+        cast.framework
+        .CastContext
+        .getInstance();
 
         context.addEventListener(
-            cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+
+            cast.framework
+            .CastContextEventType
+            .SESSION_STATE_CHANGED,
+
             function(event) {
 
                 if (
+
                     event.sessionState ===
-                    cast.framework.SessionState.SESSION_STARTED
+
+                    cast.framework
+                    .SessionState
+                    .SESSION_STARTED
+
                 ) {
 
                     enviarAlChromecast();
@@ -265,56 +414,82 @@
         );
     }
 
-    // Chromecast
+    // Enviar Chromecast
+
     async function enviarAlChromecast() {
 
         try {
 
             const context =
-                cast.framework.CastContext.getInstance();
+
+            cast.framework
+            .CastContext
+            .getInstance();
 
             const session =
-                context.getCurrentSession();
+
+            context
+            .getCurrentSession();
 
             const mediaInfo =
-                new chrome.cast.media.MediaInfo(
-                    currentStream,
-                    'application/vnd.apple.mpegurl'
-                );
+
+            new chrome.cast
+            .media.MediaInfo(
+
+                currentStream,
+
+                'application/vnd.apple.mpegurl'
+            );
 
             mediaInfo.streamType =
-                chrome.cast.media.StreamType.LIVE;
+
+            chrome.cast
+            .media.StreamType.LIVE;
 
             mediaInfo.metadata =
-                new chrome.cast.media.GenericMediaMetadata();
 
-            mediaInfo.metadata.title = "TV Online";
+            new chrome.cast
+            .media.GenericMediaMetadata();
+
+            mediaInfo.metadata.title =
+            "TV Online";
 
             const request =
-                new chrome.cast.media.LoadRequest(mediaInfo);
 
-            await session.loadMedia(request);
+            new chrome.cast
+            .media.LoadRequest(
+                mediaInfo
+            );
 
-            // Pausar celular
-            if (player && player.core) {
+            await session
+            .loadMedia(request);
+
+            if (
+                player &&
+                player.core
+            ) {
+
                 player.pause();
             }
 
-            console.log("Transmitiendo");
+        } catch(err) {
 
-        } catch (err) {
-
-            console.log("Error Cast:", err);
+            console.log(err);
         }
     }
 
-    // Web iframe
+    // Abrir web
+
     function abrirWeb(url) {
 
-        modal.style.display = "block";
+        modal.style.display =
+        "block";
 
-        playerDiv.style.display = "none";
-        wrapper.style.display = "block";
+        playerDiv.style.display =
+        "none";
+
+        wrapper.style.display =
+        "block";
 
         if (player) {
             player.destroy();
@@ -323,10 +498,12 @@
         iframe.src = url;
     }
 
-    // Cerrar
+    // Cerrar popup
+
     function cerrarPopUp() {
 
-        modal.style.display = "none";
+        modal.style.display =
+        "none";
 
         iframe.src = "";
 
@@ -336,9 +513,14 @@
     }
 
     // Click afuera
-    window.onclick = function(event) {
 
-        if (event.target == modal) {
+    window.onclick =
+    function(event) {
+
+        if (
+            event.target == modal
+        ) {
+
             cerrarPopUp();
         }
     };
