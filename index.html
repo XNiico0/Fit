@@ -8,6 +8,9 @@
     <!-- Clappr -->
     <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
 
+    <!-- HLS -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
     <!-- Chromecast -->
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
@@ -124,6 +127,25 @@
             overflow: hidden;
         }
 
+        #hlsContainer {
+
+            width: 100%;
+            height: 100%;
+
+            background: #000;
+
+            border-radius: 12px;
+            overflow: hidden;
+
+            display: none;
+        }
+
+        #hlsVideo {
+
+            width: 100%;
+            height: 100%;
+        }
+
         .iframe-wrapper {
 
             width: 100%;
@@ -193,82 +215,107 @@
         }
 
     </style>
+
 </head>
 <body>
 
 <div class="container">
 
-    <h1>Mi TV Online</h1>
+<h1>Mi TV Online</h1>
 
-    <div class="btn-group">
+<div class="btn-group">
 
-        <!-- Telefe -->
-        <button class="btn-popup btn-telefe"
-        onclick="abrirWeb(
-        'https://rosario.mitelefe.com/telefe-rosario-en-vivo'
-        )">
+    <!-- Telefe -->
+    <button class="btn-popup btn-telefe"
+    onclick="abrirWeb(
+    'https://rosario.mitelefe.com/telefe-rosario-en-vivo'
+    )">
 
-            🔵 VER TELEFE ROSARIO
+        🔵 VER TELEFE ROSARIO
 
-        </button>      
+    </button>
 
-        <!-- América -->
-        <button class="btn-popup btn-america"
-        onclick="cargarCanal('america')">
+    <!-- Discovery -->
+    <button class="btn-popup btn-discovery"
+    onclick="cargarCanal('discovery')">
 
-            🔴 VER AMÉRICA TV
+        🟠 VER DISCOVERY H&H
 
-        </button>
+    </button>
 
-        <!-- Tn nico -->
-        <button class="btn-popup btn-tn nico"
-        onclick="cargarCanal('tn nico')">
+    <!-- América -->
+    <button class="btn-popup btn-america"
+    onclick="cargarCanal('america')">
 
-            🔵 VER TN EN VIVO
+        🔴 VER AMÉRICA TV
 
-        </button>
+    </button>
 
-    </div>
+    <!-- TN -->
+    <button class="btn-popup btn-tn"
+    onclick="cargarCanalHLS('tn')">
+
+        🔵 VER TN EN VIVO
+
+    </button>
+
+</div>
 
 </div>
 
 <div id="miModal" class="modal">
 
-    <div class="modal-content">
+<div class="modal-content">
 
-        <span class="close"
-        onclick="cerrarPopUp()">
+    <span class="close"
+    onclick="cerrarPopUp()">
 
-            ✕ CERRAR
+        ✕ CERRAR
 
-        </span>
+    </span>
 
-        <google-cast-launcher>
-        </google-cast-launcher>
+    <google-cast-launcher>
+    </google-cast-launcher>
 
-        <div id="player"
-        style="display:none;">
-        </div>
+    <!-- Clappr -->
+    <div id="player"
+    style="display:none;">
+    </div>
 
-        <div id="wrapperTelefe"
-        class="iframe-wrapper"
-        style="display:none;">
+    <!-- HLS -->
+    <div id="hlsContainer">
 
-            <iframe id="iframeContainer"
-            class="full-view"
-            frameborder="0"
-            allowfullscreen>
-            </iframe>
-
-        </div>
+        <video
+        id="hlsVideo"
+        controls
+        autoplay
+        muted
+        playsinline>
+        </video>
 
     </div>
+
+    <!-- Iframe -->
+    <div id="wrapperTelefe"
+    class="iframe-wrapper"
+    style="display:none;">
+
+        <iframe id="iframeContainer"
+        class="full-view"
+        frameborder="0"
+        allowfullscreen>
+        </iframe>
+
+    </div>
+
+</div>
 
 </div>
 
 <script>
 
     let player;
+    let hls;
     let currentStream = "";
 
     const modal =
@@ -282,6 +329,12 @@
 
     const wrapper =
         document.getElementById('wrapperTelefe');
+
+    const hlsContainer =
+        document.getElementById('hlsContainer');
+
+    const hlsVideo =
+        document.getElementById('hlsVideo');
 
     // Chromecast
 
@@ -307,7 +360,7 @@
         }
     };
 
-    // Cargar canal JSON
+    // Cargar canal JSON (Clappr)
 
     async function cargarCanal(nombre) {
 
@@ -343,9 +396,47 @@
         }
     }
 
-    // Abrir stream
+    // Cargar canal HLS desde JSON
+
+    async function cargarCanalHLS(nombre) {
+
+        try {
+
+            const response =
+            await fetch("./canales.json");
+
+            const canales =
+            await response.json();
+
+            const url =
+            canales[nombre];
+
+            if (!url) {
+
+                alert(
+                "Canal no encontrado"
+                );
+
+                return;
+            }
+
+            abrirHLS(url);
+
+        } catch(err) {
+
+            console.log(err);
+
+            alert(
+            "Error cargando canales"
+            );
+        }
+    }
+
+    // Abrir stream Clappr
 
     function abrirStream(url) {
+
+        limpiarReproductores();
 
         currentStream = url;
 
@@ -358,11 +449,10 @@
         wrapper.style.display =
         "none";
 
-        iframe.src = "";
+        hlsContainer.style.display =
+        "none";
 
-        if (player) {
-            player.destroy();
-        }
+        iframe.src = "";
 
         player = new Clappr.Player({
 
@@ -375,116 +465,71 @@
 
             autoPlay: true
         });
-
-        // Error stream
-
-        player.on(
-        Clappr.Events.PLAYER_ERROR,
-        () => {
-
-            console.log(
-            "Error stream"
-            );
-        });
-
-        // Chromecast
-
-        const context =
-        cast.framework
-        .CastContext
-        .getInstance();
-
-        context.addEventListener(
-
-            cast.framework
-            .CastContextEventType
-            .SESSION_STATE_CHANGED,
-
-            function(event) {
-
-                if (
-
-                    event.sessionState ===
-
-                    cast.framework
-                    .SessionState
-                    .SESSION_STARTED
-
-                ) {
-
-                    enviarAlChromecast();
-                }
-            }
-        );
     }
 
-    // Enviar Chromecast
+    // Abrir HLS
 
-    async function enviarAlChromecast() {
+    function abrirHLS(url) {
 
-        try {
+        limpiarReproductores();
 
-            const context =
+        currentStream = url;
 
-            cast.framework
-            .CastContext
-            .getInstance();
+        modal.style.display =
+        "block";
 
-            const session =
+        playerDiv.style.display =
+        "none";
 
-            context
-            .getCurrentSession();
+        wrapper.style.display =
+        "none";
 
-            const mediaInfo =
+        hlsContainer.style.display =
+        "block";
 
-            new chrome.cast
-            .media.MediaInfo(
+        if (Hls.isSupported()) {
 
-                currentStream,
+            hls = new Hls({
+                debug: false,
+                enableWorker: true,
+                manifestLoadingMaxRetry: 10,
+                manifestLoadingRetryDelay: 1000
+            });
 
-                'application/vnd.apple.mpegurl'
-            );
+            hls.loadSource(url);
+            hls.attachMedia(hlsVideo);
 
-            mediaInfo.streamType =
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
 
-            chrome.cast
-            .media.StreamType.LIVE;
+                hlsVideo.play();
+            });
 
-            mediaInfo.metadata =
+            hls.on(Hls.Events.ERROR, function(event, data) {
 
-            new chrome.cast
-            .media.GenericMediaMetadata();
+                if (data.fatal) {
 
-            mediaInfo.metadata.title =
-            "TV Online";
+                    console.log(
+                    "Error HLS:",
+                    data.type
+                    );
+                }
+            });
 
-            const request =
+        } else if (
+            hlsVideo.canPlayType(
+            'application/vnd.apple.mpegurl'
+            )
+        ) {
 
-            new chrome.cast
-            .media.LoadRequest(
-                mediaInfo
-            );
-
-            await session
-            .loadMedia(request);
-
-            if (
-                player &&
-                player.core
-            ) {
-
-                player.pause();
-            }
-
-        } catch(err) {
-
-            console.log(err);
+            hlsVideo.src = url;
         }
     }
 
     // Abrir web
 
     function abrirWeb(url) {
+
+        limpiarReproductores();
 
         modal.style.display =
         "block";
@@ -495,11 +540,32 @@
         wrapper.style.display =
         "block";
 
-        if (player) {
-            player.destroy();
-        }
+        hlsContainer.style.display =
+        "none";
 
         iframe.src = url;
+    }
+
+    // Limpiar reproductores
+
+    function limpiarReproductores() {
+
+        iframe.src = "";
+
+        if (player) {
+
+            player.destroy();
+            player = null;
+        }
+
+        if (hls) {
+
+            hls.destroy();
+            hls = null;
+        }
+
+        hlsVideo.pause();
+        hlsVideo.src = "";
     }
 
     // Cerrar popup
@@ -509,11 +575,7 @@
         modal.style.display =
         "none";
 
-        iframe.src = "";
-
-        if (player) {
-            player.destroy();
-        }
+        limpiarReproductores();
     }
 
     // Click afuera
