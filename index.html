@@ -1,895 +1,659 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi TV Online</title>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <!-- Clappr -->
+    <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
 
-<title>Mi TV Online</title>
+    <!-- HLS -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-<!-- Clappr -->
-<script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+    <!-- Chromecast -->
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
-<!-- HLS.js -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
 
-<!-- Chromecast -->
-<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+        body {
+            background: #0f0f0f;
+            margin: 0;
+            min-height: 100vh;
 
-<style>
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+            font-family: Arial;
+            color: white;
+        }
 
-body{
+        .container {
+            text-align: center;
+        }
 
-    background:#0b0b0b;
-    color:white;
-    font-family:Arial, Helvetica, sans-serif;
+        .btn-group {
 
-    min-height:100vh;
+            display: flex;
+            flex-direction: column;
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
+            gap: 15px;
+            margin-top: 20px;
+        }
 
-    padding:20px;
-}
+        .btn-popup {
 
-.container{
+            border: none;
+            border-radius: 8px;
 
-    width:100%;
-    max-width:500px;
-}
+            padding: 15px 30px;
 
-.title{
+            font-size: 16px;
+            font-weight: bold;
 
-    text-align:center;
-    margin-bottom:25px;
+            cursor: pointer;
 
-    font-size:32px;
-    font-weight:700;
-}
+            color: white;
 
-.btn-group{
+            min-width: 260px;
 
-    display:flex;
-    flex-direction:column;
-    gap:15px;
-}
+            transition: .3s;
+        }
 
-.channel-btn{
+        .btn-popup:hover {
 
-    border:none;
-    border-radius:14px;
+            transform: scale(1.03);
+            opacity: .9;
+        }
 
-    padding:18px;
+        .btn-telefe {
+            background: #28a745;
+        }
 
-    font-size:17px;
-    font-weight:bold;
+        .btn-america {
+            background: #e53935;
+        }
 
-    color:white;
+        .btn-tn {
+            background: #1976d2;
+        }
 
-    cursor:pointer;
+        .modal {
 
-    transition:.25s;
+            display: none;
 
-    width:100%;
-}
+            position: fixed;
 
-.channel-btn:hover{
+            z-index: 999;
 
-    transform:scale(1.02);
-    opacity:.95;
-}
+            left: 0;
+            top: 0;
 
-.channel-btn:active{
+            width: 100%;
+            height: 100%;
 
-    transform:scale(.98);
-}
+            background: rgba(0,0,0,.95);
+        }
 
-.telefe{
-    background:#1e88e5;
-}
+        .modal-content {
 
-.discovery{
-    background:#fb8c00;
-}
+            position: relative;
 
-.america{
-    background:#e53935;
-}
+            margin: auto;
 
-.tn{
-    background:#1565c0;
-}
+            top: 50%;
 
-.modal{
+            transform: translateY(-50%);
 
-    position:fixed;
+            width: 95%;
+            max-width: 900px;
 
-    inset:0;
+            aspect-ratio: 16/9;
+        }
 
-    background:rgba(0,0,0,.96);
+        #player {
 
-    z-index:9999;
+            width: 100%;
+            height: 100%;
 
-    display:none;
+            background: #000;
 
-    justify-content:center;
-    align-items:center;
+            border-radius: 12px;
+            overflow: hidden;
+        }
 
-    padding:20px;
-}
+        #hlsContainer {
 
-.modal.active{
+            width: 100%;
+            height: 100%;
 
-    display:flex;
-}
+            background: #000;
 
-.modal-content{
+            border-radius: 12px;
+            overflow: hidden;
 
-    position:relative;
+            display: none;
+        }
 
-    width:100%;
-    max-width:1200px;
+        #hlsVideo {
 
-    aspect-ratio:16/9;
+            width: 100%;
+            height: 100%;
+        }
 
-    background:black;
+        .iframe-wrapper {
 
-    border-radius:16px;
+            width: 100%;
+            height: 100%;
 
-    overflow:hidden;
-}
+            overflow: hidden;
 
-#player{
+            position: relative;
 
-    width:100%;
-    height:100%;
-}
+            border-radius: 12px;
 
-#hlsContainer{
+            background: #000;
+        }
 
-    width:100%;
-    height:100%;
+        #iframeContainer.full-view {
 
-    display:none;
-}
+            position: absolute;
 
-#hlsVideo{
+            top: -245px;
+            left: -2%;
 
-    width:100%;
-    height:100%;
+            width: 104%;
+            height: 1000px;
 
-    background:black;
-}
+            border: none;
+        }
 
-#iframeWrapper{
+        @media (max-width: 600px) {
 
-    width:100%;
-    height:100%;
+            #iframeContainer.full-view {
 
-    display:none;
+                top: -135px;
 
-    overflow:hidden;
+                width: 110%;
 
-    position:relative;
-}
+                left: -5%;
+            }
+        }
 
-#iframePlayer{
+        .close {
 
-    position:absolute;
+            position: absolute;
 
-    border:none;
+            top: -40px;
+            right: 0;
 
-    width:100%;
-    height:100%;
-}
+            font-size: 24px;
 
-.close-btn{
+            font-weight: bold;
 
-    position:absolute;
+            cursor: pointer;
 
-    top:12px;
-    right:12px;
+            z-index: 1001;
+        }
 
-    z-index:99999;
+        google-cast-launcher {
 
-    background:rgba(0,0,0,.7);
+            position: absolute;
 
-    border:none;
+            top: 12px;
+            right: 55px;
 
-    color:white;
+            width: 28px;
+            height: 28px;
 
-    width:42px;
-    height:42px;
+            z-index: 9999;
+        }
 
-    border-radius:50%;
-
-    font-size:20px;
-
-    cursor:pointer;
-}
-
-.close-btn:hover{
-
-    background:rgba(255,255,255,.15);
-}
-
-google-cast-launcher{
-
-    position:absolute;
-
-    top:14px;
-    right:62px;
-
-    z-index:99999;
-
-    width:28px;
-    height:28px;
-}
-
-.loader{
-
-    position:absolute;
-
-    inset:0;
-
-    display:none;
-
-    justify-content:center;
-    align-items:center;
-
-    background:black;
-
-    z-index:100;
-}
-
-.loader.active{
-
-    display:flex;
-}
-
-.spinner{
-
-    width:60px;
-    height:60px;
-
-    border:5px solid rgba(255,255,255,.15);
-    border-top-color:white;
-
-    border-radius:50%;
-
-    animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-
-    to{
-        transform:rotate(360deg);
-    }
-}
-
-.error-box{
-
-    position:absolute;
-
-    inset:0;
-
-    display:none;
-
-    justify-content:center;
-    align-items:center;
-
-    text-align:center;
-
-    padding:20px;
-
-    background:black;
-
-    z-index:150;
-}
-
-.error-box.active{
-
-    display:flex;
-}
-
-.error-content{
-
-    max-width:400px;
-}
-
-.error-content h2{
-
-    margin-bottom:10px;
-}
-
-.retry-btn{
-
-    margin-top:20px;
-
-    border:none;
-
-    padding:12px 20px;
-
-    border-radius:10px;
-
-    background:#1976d2;
-
-    color:white;
-
-    cursor:pointer;
-
-    font-weight:bold;
-}
-
-@media(max-width:700px){
-
-    .title{
-        font-size:26px;
-    }
-
-    .channel-btn{
-
-        padding:16px;
-        font-size:15px;
-    }
-
-    .modal-content{
-
-        aspect-ratio:auto;
-        height:70vh;
-    }
-}
-
-</style>
+    </style>
 
 </head>
 <body>
 
 <div class="container">
 
-    <h1 class="title">
-        📺 Mi TV Online
-    </h1>
+<h1>Mi TV Online</h1>
 
-    <div class="btn-group">
+<div class="btn-group">
 
-        <button
-        class="channel-btn telefe"
-        onclick="abrirWeb('https://rosario.mitelefe.com/telefe-rosario-en-vivo')">
+    <!-- Telefe -->
+    <button class="btn-popup btn-telefe"
+    onclick="abrirWeb(
+    'https://rosario.mitelefe.com/telefe-rosario-en-vivo'
+    )">
 
-            🔵 VER TELEFE ROSARIO
+        🔵 VER TELEFE ROSARIO
 
-        </button>
+    </button>
 
-        <button
-        class="channel-btn discovery"
-        onclick="cargarCanal('discovery')">
+    <!-- América -->
+    <button class="btn-popup btn-america"
+    onclick="cargarCanal('america')">
 
-            🟠 VER DISCOVERY H&H
+        🔴 VER AMÉRICA TV
 
-        </button>
+    </button>
 
-        <button
-        class="channel-btn america"
-        onclick="cargarCanal('america')">
+    <!-- TN -->
+    <button class="btn-popup btn-tn"
+    onclick="cargarCanalHLS('tn')">
 
-            🔴 VER AMÉRICA TV
+        🔵 VER TN EN VIVO
 
-        </button>
+    </button>
 
-        <button
-        class="channel-btn tn"
-        onclick="cargarCanalHLS('tn')">
+</div>
 
-            🔵 VER TN EN VIVO
+</div>
 
-        </button>
+<div id="miModal" class="modal">
+
+<div class="modal-content">
+
+    <span class="close"
+    onclick="cerrarPopUp()">
+
+        ✕ CERRAR
+
+    </span>
+
+    <!-- Chromecast -->
+    <google-cast-launcher>
+    </google-cast-launcher>
+
+    <!-- Clappr -->
+    <div id="player"
+    style="display:none;">
+    </div>
+
+    <!-- HLS -->
+    <div id="hlsContainer">
+
+        <video
+        id="hlsVideo"
+        controls
+        autoplay
+        muted
+        playsinline>
+        </video>
+
+    </div>
+
+    <!-- Telefe iframe -->
+    <div id="wrapperTelefe"
+    class="iframe-wrapper"
+    style="display:none;">
+
+        <iframe id="iframeContainer"
+        class="full-view"
+        frameborder="0"
+        allowfullscreen>
+        </iframe>
 
     </div>
 
 </div>
-
-<!-- MODAL -->
-
-<div class="modal" id="modal">
-
-    <div class="modal-content">
-
-        <button
-        class="close-btn"
-        onclick="cerrarPlayer()">
-
-            ✕
-
-        </button>
-
-        <google-cast-launcher>
-        </google-cast-launcher>
-
-        <!-- LOADER -->
-
-        <div class="loader" id="loader">
-
-            <div class="spinner"></div>
-
-        </div>
-
-        <!-- ERROR -->
-
-        <div class="error-box" id="errorBox">
-
-            <div class="error-content">
-
-                <h2>
-                    Error al cargar el canal
-                </h2>
-
-                <p id="errorText">
-                    No se pudo reproducir.
-                </p>
-
-                <button
-                class="retry-btn"
-                onclick="reintentarCanal()">
-
-                    Reintentar
-
-                </button>
-
-            </div>
-
-        </div>
-
-        <!-- CLAPPR -->
-
-        <div id="player"></div>
-
-        <!-- HLS -->
-
-        <div id="hlsContainer">
-
-            <video
-            id="hlsVideo"
-            controls
-            autoplay
-            playsinline
-            muted>
-            </video>
-
-        </div>
-
-        <!-- IFRAME -->
-
-        <div id="iframeWrapper">
-
-            <iframe
-            id="iframePlayer"
-            allowfullscreen>
-            </iframe>
-
-        </div>
-
-    </div>
 
 </div>
 
 <script>
 
-let player = null;
-let hls = null;
+    let player;
+    let hls;
+    let currentStream = "";
 
-let ultimoMetodo = null;
-let ultimoCanal = null;
+    // JSON implementado
 
-const modal =
-document.getElementById("modal");
+    const canales = {
 
-const playerDiv =
-document.getElementById("player");
+        america:
+        "https://dai.google.com/linear/hls/pa/event/OY2i_lL4SMyXE5Zaj4ULEg/stream/e2d5f1bb-87c9-420b-85a3-4c8e5ef040aa:SCL2/variant/085a2414a253631c90e7ac89ccc9f934/bandwidth/1031000.m3u8",
 
-const hlsContainer =
-document.getElementById("hlsContainer");
+        tn:
+        "https://live-01-01-tn.vodgc.net/TN24/index.m3u8"
+    };
 
-const hlsVideo =
-document.getElementById("hlsVideo");
+    const modal =
+        document.getElementById('miModal');
 
-const iframeWrapper =
-document.getElementById("iframeWrapper");
+    const playerDiv =
+        document.getElementById('player');
 
-const iframePlayer =
-document.getElementById("iframePlayer");
+    const hlsContainer =
+        document.getElementById('hlsContainer');
 
-const loader =
-document.getElementById("loader");
+    const hlsVideo =
+        document.getElementById('hlsVideo');
 
-const errorBox =
-document.getElementById("errorBox");
+    const wrapper =
+        document.getElementById('wrapperTelefe');
 
-const errorText =
-document.getElementById("errorText");
+    const iframe =
+        document.getElementById('iframeContainer');
 
-function mostrarLoader(){
+    // Chromecast setup
 
-    loader.classList.add("active");
-}
+    window['__onGCastApiAvailable'] =
+    function(isAvailable) {
 
-function ocultarLoader(){
+        if (isAvailable) {
 
-    loader.classList.remove("active");
-}
+            cast.framework
+            .CastContext
+            .getInstance()
+            .setOptions({
 
-function mostrarError(msg){
+                receiverApplicationId:
+                chrome.cast.media
+                .DEFAULT_MEDIA_RECEIVER_APP_ID,
 
-    errorText.innerText = msg;
+                autoJoinPolicy:
+                chrome.cast
+                .AutoJoinPolicy
+                .ORIGIN_SCOPED
+            });
+        }
+    };
 
-    errorBox.classList.add("active");
+    // América con Clappr
 
-    ocultarLoader();
-}
+    function cargarCanal(nombre) {
 
-function ocultarError(){
+        const url = canales[nombre];
 
-    errorBox.classList.remove("active");
-}
+        if (!url) {
 
-function abrirModal(){
-
-    modal.classList.add("active");
-}
-
-function cerrarPlayer(){
-
-    modal.classList.remove("active");
-
-    limpiarTodo();
-}
-
-function limpiarTodo(){
-
-    ocultarLoader();
-    ocultarError();
-
-    iframePlayer.src = "";
-
-    iframeWrapper.style.display = "none";
-
-    hlsContainer.style.display = "none";
-
-    playerDiv.style.display = "none";
-
-    if(player){
-
-        player.destroy();
-        player = null;
-    }
-
-    if(hls){
-
-        hls.destroy();
-        hls = null;
-    }
-
-    hlsVideo.pause();
-
-    hlsVideo.removeAttribute("src");
-
-    hlsVideo.load();
-}
-
-window.onclick = function(e){
-
-    if(e.target === modal){
-
-        cerrarPlayer();
-    }
-};
-
-document.addEventListener("keydown", function(e){
-
-    if(e.key === "Escape"){
-
-        cerrarPlayer();
-    }
-});
-
-async function obtenerCanales(){
-
-    const response =
-    await fetch("./canales.json?t=" + Date.now());
-
-    if(!response.ok){
-
-        throw new Error("No se pudo leer canales.json");
-    }
-
-    return await response.json();
-}
-
-async function cargarCanal(nombre){
-
-    ultimoMetodo = "clappr";
-    ultimoCanal = nombre;
-
-    try{
-
-        mostrarLoader();
-
-        const canales =
-        await obtenerCanales();
-
-        const url =
-        canales[nombre];
-
-        if(!url){
-
-            throw new Error(
-            "Canal no encontrado"
-            );
+            alert("Canal no encontrado");
+            return;
         }
 
         abrirStream(url);
-
-    }catch(err){
-
-        console.error(err);
-
-        mostrarError(
-        err.message
-        );
     }
-}
 
-async function cargarCanalHLS(nombre){
+    // TN con HLS
 
-    ultimoMetodo = "hls";
-    ultimoCanal = nombre;
+    function cargarCanalHLS(nombre) {
 
-    try{
+        const url = canales[nombre];
 
-        mostrarLoader();
+        if (!url) {
 
-        const canales =
-        await obtenerCanales();
-
-        const url =
-        canales[nombre];
-
-        if(!url){
-
-            throw new Error(
-            "Canal no encontrado"
-            );
+            alert("Canal no encontrado");
+            return;
         }
 
         abrirHLS(url);
-
-    }catch(err){
-
-        console.error(err);
-
-        mostrarError(
-        err.message
-        );
     }
-}
 
-function abrirStream(url){
+    // Abrir América
 
-    limpiarTodo();
+    function abrirStream(url) {
 
-    abrirModal();
+        limpiarReproductores();
 
-    mostrarLoader();
+        currentStream = url;
 
-    playerDiv.style.display = "block";
+        modal.style.display =
+        "block";
 
-    player = new Clappr.Player({
+        playerDiv.style.display =
+        "block";
 
-        source:url,
+        hlsContainer.style.display =
+        "none";
 
-        parentId:"#player",
+        wrapper.style.display =
+        "none";
 
-        width:"100%",
-        height:"100%",
+        player = new Clappr.Player({
 
-        autoPlay:true,
+            source: url,
 
-        mute:false,
+            parentId: "#player",
 
-        mediacontrol:{
-            seekbar:"#1976d2",
-            buttons:"#ffffff"
-        }
-    });
+            width: "100%",
+            height: "100%",
 
-    player.on(
-    Clappr.Events.PLAYER_READY,
-    function(){
-
-        ocultarLoader();
-    });
-
-    player.on(
-    Clappr.Events.PLAYER_ERROR,
-    function(){
-
-        mostrarError(
-        "El stream no pudo reproducirse."
-        );
-    });
-}
-
-function abrirHLS(url){
-
-    limpiarTodo();
-
-    abrirModal();
-
-    mostrarLoader();
-
-    hlsContainer.style.display = "block";
-
-    if(Hls.isSupported()){
-
-        hls = new Hls({
-
-            enableWorker:true,
-
-            lowLatencyMode:true,
-
-            backBufferLength:90
+            autoPlay: true
         });
 
-        hls.loadSource(url);
+        escucharChromecast();
+    }
 
-        hls.attachMedia(hlsVideo);
+    // Abrir TN
 
-        hls.on(
-        Hls.Events.MANIFEST_PARSED,
-        function(){
+    function abrirHLS(url) {
 
-            hlsVideo.play()
-            .then(() => {
+        limpiarReproductores();
 
-                ocultarLoader();
+        currentStream = url;
 
-            })
-            .catch(err => {
+        modal.style.display =
+        "block";
 
-                console.log(err);
+        playerDiv.style.display =
+        "none";
 
-                ocultarLoader();
+        hlsContainer.style.display =
+        "block";
+
+        wrapper.style.display =
+        "none";
+
+        hlsVideo.muted = true;
+        hlsVideo.autoplay = true;
+
+        if (Hls.isSupported()) {
+
+            hls = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true
             });
-        });
 
-        hls.on(
-        Hls.Events.ERROR,
-        function(event, data){
+            hls.loadSource(url);
 
-            console.error(data);
+            hls.attachMedia(hlsVideo);
 
-            if(data.fatal){
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
 
-                switch(data.type){
+                hlsVideo.play()
+                .catch(err => {
 
-                    case Hls.ErrorTypes.NETWORK_ERROR:
+                    console.log(err);
+                });
+            });
 
-                        hls.startLoad();
+        } else if (
+            hlsVideo.canPlayType(
+            'application/vnd.apple.mpegurl'
+            )
+        ) {
 
-                        break;
+            hlsVideo.src = url;
 
-                    case Hls.ErrorTypes.MEDIA_ERROR:
+            hlsVideo.addEventListener(
+            'loadedmetadata',
+            function() {
 
-                        hls.recoverMediaError();
+                hlsVideo.play();
+            });
+        }
 
-                        break;
-
-                    default:
-
-                        mostrarError(
-                        "Error fatal HLS."
-                        );
-
-                        hls.destroy();
-
-                        break;
-                }
-            }
-        });
-
-    }else if(
-        hlsVideo.canPlayType(
-        "application/vnd.apple.mpegurl"
-        )
-    ){
-
-        hlsVideo.src = url;
-
-        hlsVideo.addEventListener(
-        "loadedmetadata",
-        function(){
-
-            hlsVideo.play();
-
-            ocultarLoader();
-        });
-
-    }else{
-
-        mostrarError(
-        "Tu navegador no soporta HLS."
-        );
+        escucharChromecast();
     }
-}
 
-function abrirWeb(url){
+    // Escuchar Chromecast
 
-    limpiarTodo();
+    function escucharChromecast() {
 
-    abrirModal();
-
-    mostrarLoader();
-
-    iframeWrapper.style.display = "block";
-
-    iframePlayer.src = url;
-
-    iframePlayer.onload = function(){
-
-        ocultarLoader();
-    };
-}
-
-function reintentarCanal(){
-
-    ocultarError();
-
-    if(
-        ultimoMetodo === "clappr"
-    ){
-
-        cargarCanal(
-        ultimoCanal
-        );
-
-    }else if(
-        ultimoMetodo === "hls"
-    ){
-
-        cargarCanalHLS(
-        ultimoCanal
-        );
-    }
-}
-
-window['__onGCastApiAvailable'] =
-function(isAvailable){
-
-    if(isAvailable){
-
+        const context =
         cast.framework
         .CastContext
-        .getInstance()
-        .setOptions({
+        .getInstance();
 
-            receiverApplicationId:
-            chrome.cast.media
-            .DEFAULT_MEDIA_RECEIVER_APP_ID,
+        context.addEventListener(
 
-            autoJoinPolicy:
-            chrome.cast
-            .AutoJoinPolicy
-            .ORIGIN_SCOPED
-        });
+            cast.framework
+            .CastContextEventType
+            .SESSION_STATE_CHANGED,
+
+            function(event) {
+
+                if (
+
+                    event.sessionState ===
+
+                    cast.framework
+                    .SessionState
+                    .SESSION_STARTED
+
+                ) {
+
+                    enviarAlChromecast();
+                }
+            }
+        );
     }
-};
+
+    // Enviar stream al Chromecast
+
+    async function enviarAlChromecast() {
+
+        try {
+
+            const context =
+
+            cast.framework
+            .CastContext
+            .getInstance();
+
+            const session =
+
+            context
+            .getCurrentSession();
+
+            const mediaInfo =
+
+            new chrome.cast
+            .media.MediaInfo(
+
+                currentStream,
+
+                'application/vnd.apple.mpegurl'
+            );
+
+            mediaInfo.streamType =
+
+            chrome.cast
+            .media.StreamType.LIVE;
+
+            mediaInfo.metadata =
+
+            new chrome.cast
+            .media.GenericMediaMetadata();
+
+            mediaInfo.metadata.title =
+            "TV Online";
+
+            const request =
+
+            new chrome.cast
+            .media.LoadRequest(
+                mediaInfo
+            );
+
+            await session
+            .loadMedia(request);
+
+            if (
+                player &&
+                player.core
+            ) {
+
+                player.pause();
+            }
+
+            if (hlsVideo) {
+
+                hlsVideo.pause();
+            }
+
+        } catch(err) {
+
+            console.log(err);
+        }
+    }
+
+    // Abrir Telefe
+
+    function abrirWeb(url) {
+
+        limpiarReproductores();
+
+        modal.style.display =
+        "block";
+
+        playerDiv.style.display =
+        "none";
+
+        hlsContainer.style.display =
+        "none";
+
+        wrapper.style.display =
+        "block";
+
+        iframe.src = url;
+    }
+
+    // Limpiar
+
+    function limpiarReproductores() {
+
+        iframe.src = "";
+
+        if (player) {
+
+            player.destroy();
+            player = null;
+        }
+
+        if (hls) {
+
+            hls.destroy();
+            hls = null;
+        }
+
+        hlsVideo.pause();
+        hlsVideo.src = "";
+    }
+
+    // Cerrar
+
+    function cerrarPopUp() {
+
+        modal.style.display =
+        "none";
+
+        limpiarReproductores();
+    }
+
+    // Click afuera
+
+    window.onclick =
+    function(event) {
+
+        if (
+            event.target == modal
+        ) {
+
+            cerrarPopUp();
+        }
+    };
 
 </script>
 
